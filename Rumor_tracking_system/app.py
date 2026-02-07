@@ -105,7 +105,7 @@ def submit_report(rid):
     
     # Business Rule: ถ้ารายงานรวมสะสม >= 3 ให้ปรับเป็น panic อัตโนมัติ
     total_reports = Report.query.filter_by(rumour_id=rid).count() + 1
-    if total_reports >= 3 and rumour.status == 'ปกติ':
+    if total_reports >= 4 and rumour.status == 'ปกติ':
         rumour.status = 'panic' 
     
     db.session.commit()
