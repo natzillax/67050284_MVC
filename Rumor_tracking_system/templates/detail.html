@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>รายละเอียดข่าวลือ - Rumor Tracker</title>
+    <style>
+        .status-badge {
+            font-size: 1rem;
+            padding: 0.5em 1em;
+        }
+
+        .section-title {
+            border-left: 5px solid #0d6efd;
+            padding-left: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow">
+        <div class="container">
+            <a class="navbar-brand" href="/">📢 Rumor Tracking System</a>
+            <div class="navbar-nav">
+                <a class="btn btn-outline-light btn-sm" href="/">กลับหน้ารวม</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="text-primary mb-3">{{ rumour.title }}</h2>
+                        <hr>
+                        <div class="row mb-3">
+                            <div class="col-sm-4 text-muted">รหัสข่าวลือ:</div>
+                            <div class="col-sm-8 font-monospace">#{{ rumour.id }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4 text-muted">สถานะปัจจุบัน:</div>
+                            <div class="col-sm-8">
+                                <span class="badge status-badge 
+                                    {% if rumour.status|lower == 'panic' %}bg-danger
+                                    {% elif rumour.status == 'ข้อมูลจริง' %}bg-success
+                                    {% elif rumour.status == 'ข้อมูลเท็จ' %}bg-warning text-dark
+                                    {% else %}bg-info text-dark{% endif %}">
+                                    {{ rumour.status | upper }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4 text-muted">แหล่งที่มา:</div>
+                            <div class="col-sm-8">{{ rumour.source }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4 text-muted">วันที่สร้าง:</div>
+                            <div class="col-sm-8">{{ rumour.created_at.strftime('%d %B %Y') }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4 text-muted">ความร้อนแรง:</div>
+                            <div class="col-sm-8 text-danger fw-bold">{{ reports_count }} การแจ้งรายงาน</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm mb-4 border-danger">
+                    <div class="card-header bg-danger text-white fw-bold">
+                        🚨 แจ้งรายงานข่าวลือ (User)
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">หากคุณพบว่าข่าวนี้มีความบิดเบือนหรือปลุกปั่น กรุณาแจ้งรายงาน</p>
+                        <form action="/report/{{ rumour.id }}" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label small">รหัสผู้ใช้งาน</label>
+                                <input type="number" name="user_id" class="form-control" placeholder="ระบุรหัส 101-109"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">ประเภทการรายงาน</label>
+                                <select name="report_type" class="form-select">
+                                    <option value="บิดเบือน">บิดเบือนข้อมูล</option>
+                                    <option value="ปลุกปั่น">ปลุกปั่นให้แตกแยก</option>
+                                    <option value="ข้อมูลเท็จ">ข้อมูลเป็นเท็จทั้งหมด</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100" {% if rumour.status in
+                                ['ข้อมูลจริง', 'ข้อมูลเท็จ' ] %}disabled{% endif %}>
+                                {% if rumour.status in ['ข้อมูลจริง', 'ข้อมูลเท็จ'] %}ปิดการรับรายงาน{% else
+                                %}ส่งรายงานข่าวลือ{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-warning">
+                    <div class="card-header bg-warning text-dark fw-bold">🛡️ Auditor Verification</div>
+                    <div class="card-body bg-light">
+                        <form action="/verify/{{ rumour.id }}" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label small">รหัสผู้ตรวจสอบ (ใช้ 999 เพื่อทดสอบสิทธิ์)</label>
+                                <input type="number" name="auditor_id" class="form-control mb-2"
+                                    placeholder="ใส่ User ID ของคุณ" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">เปลี่ยนสถานะเป็น</label>
+                                <select name="new_status" class="form-select">
+                                    <option value="ข้อมูลจริง">✅ ข้อมูลจริง</option>
+                                    <option value="ข้อมูลเท็จ">❌ ข้อมูลเท็จ</option>
+                                    <option value="ปกติ">🔄 คืนค่าสถานะปกติ</option>
+                                    <option value="panic">🚨 panic</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100">ยืนยันการตรวจสอบ</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

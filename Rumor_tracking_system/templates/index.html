@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Rumor Tracking</title>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">Rumor Tracker</a>
+            <div>
+                <a class="btn btn-outline-light btn-sm" href="/">หน้าแรก</a>
+                <a class="btn btn-outline-warning btn-sm" href="/summary">หน้าสรุปผล</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h2>🔥 ข่าวลือมาแรง</h2>
+        <div class="row">
+            {% for item in rumours %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <span class="badge 
+                            {% if item.data.status|lower == 'panic' %}bg-danger
+                            {% elif item.data.status == 'ข้อมูลจริง' %}bg-success
+                            {% elif item.data.status == 'ข้อมูลเท็จ' %}bg-warning text-dark
+                            {% else %}bg-primary{% endif %} mb-2">
+                            {{ item.data.status }}
+                        </span>
+
+                        <h5 class="card-title">{{ item.data.title }}</h5>
+                        <p class="text-muted small">จำนวนการรายงาน: {{ item.count }} ครั้ง</p>
+                        <a href="/rumour/{{ item.data.id }}" class="btn btn-outline-primary w-100">ดูรายละเอียด</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>
